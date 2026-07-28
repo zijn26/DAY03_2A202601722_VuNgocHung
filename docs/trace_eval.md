@@ -4,7 +4,7 @@
 
 ---
 
-## 🎯 1. BẢNG CHẤM ĐIỂM AGENTIC FIT (SCORING MATRIX)
+## 🎯 MỐC 1: BẢNG CHẤM ĐIỂM AGENTIC FIT (SCORING MATRIX)
 
 | Tiêu chí | Điểm (1-5) | Lý do đánh giá |
 | :--- | :---: | :--- |
@@ -16,28 +16,29 @@
 
 ---
 
-## 🔍 2. SO SÁNH PHẢN HỒI (TEST CASE #3 - ĐỀ TÀI 9)
+## 🤖 MỐC 2: PHẢN HỒI CHATBOT BASELINE (TEST CASE #3 - SÀNG LỌC CV_001)
 
-**Câu hỏi**: *"Hãy kiểm tra hồ sơ ứng viên Nguyễn Văn A (ID: CV_101) cho vị trí Python Developer, nếu đạt yêu cầu thì đặt lịch phỏng vấn vào khung giờ rảnh gần nhất."*
+**Câu hỏi**: *"Đánh giá CV mã CV_001 (Nguyễn Văn A - 45 điểm): Hãy kiểm tra điểm số và thực hiện hành động phù hợp."*
 
-### 🤖 Chatbot Baseline:
-* **Phản hồi**: *"Ứng viên Nguyễn Văn A có vẻ rất phù hợp với vị trí Python Developer. Tôi đã ghi nhận và đặt lịch phỏng vấn cho ứng viên vào 9h sáng mai."*
-* **Nhận xét**: Ảo giác (Hallucination) — Chatbot không có dữ liệu thực tế về CV_101, không tra cứu JD và không truy cập được hệ thống lịch phỏng vấn nhưng vẫn bịa câu trả lời đã đặt lịch thành công.
+* **Phản hồi của Chatbot gốc**:
+  > *"Hiện tại, mình mới chỉ thấy mã CV, tên ứng viên và một điểm số (45 điểm). Mình không có nội dung chi tiết CV, tiêu chí JD hay thang điểm hệ thống. Do đó, mình không thể đánh giá hay xác nhận mức độ phù hợp của điểm số 45 này..."*
+* **Nhận xét & Phân loại Output**: **Safe Fallback** — Chatbot gốc không có quyền gọi công cụ tra cứu cơ sở dữ liệu hay hệ thống gửi mail thực tế, nên đưa ra phản hồi từ chối an toàn và yêu cầu người dùng cung cấp thông tin bổ sung.
 
-### 🧠 ReAct Agent:
-* **Thought 1**: Cần lấy thông tin CV của ứng viên CV_101 và tiêu chuẩn JD vị trí Python Developer.
-* **Action 1**: `get_candidate_cv["CV_101"]`
-* **Observation 1**: `Họ tên: Nguyễn Văn A, Kỹ năng: Python (3 năm), FastApi, Docker, SQL. Lương mong muốn: 20 triệu.`
-* **Thought 2**: CV có 3 năm Python và FastAPI/Docker. Cần kiểm tra yêu cầu vị trí Python Developer.
-* **Action 2**: `check_job_requirements["Python Developer"]`
-* **Observation 2**: `Yêu cầu: Python >= 2 năm, kinh nghiệm REST API (FastAPI/Django), làm việc với SQL. Ngân sách: 18-25 triệu.`
-* **Thought 3**: Ứng viên đáp ứng 100% yêu cầu JD. Tiếp theo cần tìm slot rảnh của người phỏng vấn.
-* **Action 3**: `check_interviewer_calendar["Tech Lead"]`
-* **Observation 3**: `Lịch rảnh khả dụng: 10:00 AM ngày 29/07/2026.`
-* **Thought 4**: Đã có slot rảnh 10:00 AM ngày 29/07/2026. Tiến hành đặt lịch phỏng vấn.
-* **Action 4**: `schedule_interview["CV_101", "10:00 AM 29/07/2026"]`
-* **Observation 4**: `Đặt lịch phỏng vấn thành công cho Nguyễn Văn A lúc 10:00 AM 29/07/2026.`
-* **Thought 5**: Đã hoàn thành quy trình sàng lọc và đặt lịch. Trả về kết quả cho người dùng.
-* **Final Answer**: *"Ứng viên Nguyễn Văn A (CV_101) đáp ứng đầy đủ yêu cầu vị trí Python Developer (3 năm kinh nghiệm Python, FastAPI, Docker). Đã tự động đặt lịch phỏng vấn thành công vào lúc 10:00 AM ngày 29/07/2026 với Tech Lead."*
-* **Nhận xét**: Hoàn thành chính xác nhờ sự kết hợp chặt chẽ giữa suy luận đa bước và gọi các công cụ tra cứu/tác động thực tế.
+---
 
+## 🧠 MỐC 3: TRÍCH XUẤT REACT TRACE LOG (THOUGHT -> ACTION -> OBSERVATION)
+
+**Câu hỏi**: *"Đánh giá CV mã CV_001 (Nguyễn Văn A - 45 điểm): Hãy kiểm tra điểm số và thực hiện hành động phù hợp."*
+
+* **Step 1**:
+  * **Thought**: `Tôi cần đánh giá CV mã CV_001 trước tiên.`
+  * **Action**: `screen_and_score_cv[CV_001]`
+  * **Observation**: `Mã CV: CV_001 | Họ tên: Nguyễn Văn A | Điểm số: 45/100 | Xếp loại: Không đạt | Trạng thái: Loại`
+* **Step 2**:
+  * **Thought**: `Tôi đã nhận được kết quả đánh giá từ tool. CV_001 (Nguyễn Văn A) đạt 45/100 điểm, xếp loại Không đạt. Cần báo cáo cho HR trước khi quyết định hành động tiếp theo.`
+* **Final Answer**:
+  > **Kết quả đánh giá CV mã CV_001 (Nguyễn Văn A):**
+  > - Điểm số: 45/100 | Xếp loại: Không đạt | Trạng thái: Loại
+  > - **Hành động đang chờ quyết định của HR**: Gửi email từ chối (`send_recruitment_email[CV_001, false]`).
+
+* **Nhận xét**: Chuỗi ReAct Agent hoạt động chuẩn xác theo kịch bản `Thought -> Action -> Observation`, gọi đúng công cụ và dừng đúng thời điểm để chờ phê duyệt của HR.

@@ -1,0 +1,44 @@
+```mermaid
+flowchart TD
+    %% =========================================================================
+    %% 📊 MỐC 4: HYBRID DECISION FLOWCHART (DE TAI 9: RECRUITMENT ASSISTANT)
+    %% Dành cho Role 5B: Flowchart Architect
+    %% =========================================================================
+
+    Start(["📥 User Query / Yêu cầu người dùng"]) --> Router{"🔀 Decision Router<br/>(Kiểm tra bản chất câu hỏi)"}
+
+    %% 🟢 LUỒNG 1: CHATBOT BASELINE PATH (Câu hỏi đơn giản / Lý thuyết)
+    Router -- "1. Câu hỏi lý thuyết / Quy định tuyển dụng<br/>(VD: Tiêu chí kỹ năng mềm, Quy trình phỏng vấn)" --> BaselinePath["🤖 Chatbot Baseline Path<br/>(1 Single LLM Call)"]
+    BaselinePath --> BaselineAns["💬 Trả lời trực tiếp từ kiến thức LLM<br/>(Tool Calls = 0 - Nhanh & Tiết kiệm)"] --> End1(["🏁 Kết thúc"])
+
+    %% 🧠 LUỒNG 2: REACT AGENT PATH (Cần tra cứu CV / Gửi mail / Lịch hẹn)
+    Router -- "2. Cần sàng lọc CV, gửi email<br/>hoặc lên lịch phỏng vấn real-time" --> ReActPath["🧠 ReAct Agent Loop<br/>(Thought ➔ Action ➔ Observation)"]
+    
+    ReActPath --> Step1["🛠️ Step 1: Action<br/>screen_and_score_cv[cv_id]"]
+    Step1 --> Obs1["👁️ Observation 1<br/>(Điểm số & Xếp loại từ Database)"]
+    
+    Obs1 --> CheckScore{"⚖️ Kiểm tra điểm số CV?"}
+    
+    %% Branch A: CV Không đạt (< 60 điểm)
+    CheckScore -- "Điểm < 60 (Loại)" --> Step2_Fail["🛠️ Step 2: Action<br/>send_recruitment_email[cv_id, is_passed=False]"]
+    Step2_Fail --> Obs2_Fail["👁️ Observation 2<br/>(Đã gửi email từ chối lịch sự)"]
+    Obs2_Fail --> FinalFail["🏁 Final Answer: Thông báo loại & Chờ HR duyệt"] --> End2(["🏁 Kết thúc"])
+
+    %% Branch B: CV Đạt (>= 60 điểm)
+    CheckScore -- "Điểm >= 60 (Đạt / Fast-track)" --> Step2_Pass["🛠️ Step 2: Action<br/>send_recruitment_email[cv_id, is_passed=True]"]
+    Step2_Pass --> Step3_Sched["🛠️ Step 3: Action<br/>schedule_interview[cv_id, date, classification]"]
+    Step3_Sched --> Obs3_Pass["👁️ Observation 3<br/>(Xác nhận lịch phỏng vấn thành công)"]
+    Obs3_Pass --> FinalPass["🏁 Final Answer: Chúc mừng & Xác nhận lịch hẹn với HR"] --> End3(["🏁 Kết thúc"])
+
+    %% 🛡️ LUỒNG 3: SAFEGUARDS & GUARDRAILS (Bẫy tấn công liên nhóm / Lỗi tham số)
+    Step1 -. "Nhập sai mã CV / Ngày 32/13/2026<br/>(Câu hỏi bẫy từ nhóm khác)" .-> Safeguard{"🛡️ Guardrail Check<br/>(MAX_ITERATIONS = 3)"}
+    Safeguard -- "Vượt quá 3 bước / Tool báo lỗi" --> SafeFallback["⚠️ Safe Fallback: Ngắt lặp an toàn & Báo cáo HR xử lý"] --> End4(["🏁 Kết thúc"])
+
+    %% CSS Styling
+    classDef baseline fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef react fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
+    classDef guard fill:#ffebee,stroke:#d32f2f,stroke-width:2px;
+    class BaselinePath,BaselineAns baseline;
+    class ReActPath,Step1,Step2_Fail,Step2_Pass,Step3_Sched react;
+    class Safeguard,SafeFallback guard;
+```
