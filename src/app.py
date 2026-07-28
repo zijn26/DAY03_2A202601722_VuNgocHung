@@ -3,8 +3,10 @@
 File chính ghép nối tất cả các thành phần: Tools + Prompts + Test Cases + Multi-Provider.
 """
 
+import ast
 import json
 import os
+import re
 import sys
 from dotenv import load_dotenv
 
@@ -19,7 +21,7 @@ if sys.stdout.encoding != 'utf-8':
         pass
 
 # Import các thành phần từ file của Role 2, Role 3 & Multi-Provider Adapter
-from tools import AVAILABLE_TOOLS, screen_and_score_cv, send_recruitment_email
+from tools import AVAILABLE_TOOLS
 from prompts import CHATBOT_BASELINE_PROMPT, REACT_SYSTEM_PROMPT, MAX_ITERATIONS
 from providers import get_llm_provider
 
@@ -44,42 +46,106 @@ def run_baseline_chatbot(user_query: str, provider):
     """
     print(f"\n💬 [CHATBOT BASELINE] Câu hỏi: {user_query}")
     print(f"⚙️ System Prompt: {CHATBOT_BASELINE_PROMPT.strip()}")
-    
+
     # Gọi LLM Provider thực hiện sinh câu trả lời
     response = provider.generate(user_query, system_prompt=CHATBOT_BASELINE_PROMPT)
     print(f"🤖 Chatbot trả lời:\n{response}")
 
 
+def build_tools_description() -> str:
+    """Sinh mô tả tool trực tiếp từ AVAILABLE_TOOLS (nguồn thật của Role 2),
+    để prompt luôn khớp tool hiện có dù Role 3 quên cập nhật REACT_SYSTEM_PROMPT."""
+    lines = []
+    for name, func in AVAILABLE_TOOLS.items():
+        first_doc_line = (func.__doc__ or "Không có mô tả.").strip().splitlines()[0]
+        lines.append(f"- {name}: {first_doc_line}")
+    return "\n".join(lines)
+
+
+def parse_action(step_text: str):
+    """Bóc tách 'Action: tool_name(args)' hoặc 'Action: tool_name[args]' từ output LLM."""
+    match = re.search(r"Action:\s*(\w+)[\[\(](.*)[\]\)]", step_text)
+    if not match:
+        return None, None
+    return match.group(1).strip(), match.group(2).strip()
+
+
+def parse_final_answer(step_text: str):
+    match = re.search(r"Final Answer:\s*(.+)", step_text, re.DOTALL)
+    return match.group(1).strip() if match else None
+
+
+def _safe_eval_arg(node):
+    """LLM đôi khi viết CV_001 thay vì 'CV_001' (thiếu dấu nháy).
+    Coi token trần đó như chuỗi ký tự, còn lại vẫn chỉ nhận literal an toàn."""
+    if isinstance(node, ast.Name):
+        return node.id
+    return ast.literal_eval(node)
+
+
+def parse_tool_args(raw_args: str):
+    """Bóc tách 'cv_id=\"CV_001\", is_passed=False' thành (args, kwargs) an toàn,
+    dùng ast.literal_eval thay vì eval() để tránh thực thi code tuỳ ý từ LLM."""
+    args, kwargs = [], {}
+    if not raw_args.strip():
+        return args, kwargs
+    call_node = ast.parse(f"f({raw_args})", mode="eval").body
+    for node in call_node.args:
+        args.append(_safe_eval_arg(node))
+    for kw in call_node.keywords:
+        kwargs[kw.arg] = _safe_eval_arg(kw.value)
+    return args, kwargs
+
+
+def call_tool(tool_name: str, raw_args: str) -> str:
+    if tool_name not in AVAILABLE_TOOLS:
+        return f"LỖI: Tool '{tool_name}' không tồn tại. Tool khả dụng: {list(AVAILABLE_TOOLS.keys())}"
+    try:
+        args, kwargs = parse_tool_args(raw_args)
+        return AVAILABLE_TOOLS[tool_name](*args, **kwargs)
+    except Exception as e:
+        return f"LỖI khi gọi tool '{tool_name}' với tham số '{raw_args}': {e}"
+
+
 def run_react_agent(user_query: str, provider):
     """
-    Dựng vòng lặp ReAct Agent (Thought -> Action -> Observation) có Guardrails.
+    Vòng lặp ReAct Agent thật: LLM tự sinh Thought -> Action dựa trên REACT_SYSTEM_PROMPT,
+    hệ thống thực thi tool tương ứng và trả Observation, lặp tới khi có Final Answer
+    hoặc chạm Guardrail MAX_ITERATIONS.
     """
     print(f"\n🤖 [REACT AGENT] Câu hỏi: {user_query}")
-    step = 0
-    
-    while step < MAX_ITERATIONS:
-        step += 1
+
+    system_prompt = (
+        REACT_SYSTEM_PROMPT
+        + "\n\nDANH SÁCH TOOL THỰC TẾ ĐANG KHẢ DỤNG (chỉ được dùng đúng tên trong danh sách này):\n"
+        + build_tools_description()
+    )
+    transcript = f"Câu hỏi của người dùng: {user_query}\n"
+
+    for step in range(1, MAX_ITERATIONS + 1):
         print(f"\n--- 🔄 Vòng lặp ReAct (Step {step}/{MAX_ITERATIONS}) ---")
-        
-        if step == 1:
-            print("🧠 Thought: Câu hỏi này cần sàng lọc và chấm điểm hồ sơ CV_001 trước.")
-            print("🛠️ Action: screen_and_score_cv['CV_001']")
 
-            # Thực thi tool
-            obs = screen_and_score_cv("CV_001")
-            print(f"👁️ Observation: {obs}")
+        raw_response = provider.generate(transcript, system_prompt=system_prompt)
+        # Cắt bỏ phần Observation nếu LLM tự "bịa" thêm (chỉ hệ thống mới được sinh Observation)
+        cut_idx = raw_response.find("Observation:")
+        step_text = raw_response[:cut_idx].rstrip() if cut_idx != -1 else raw_response.rstrip()
+        print(step_text)
 
-        elif step == 2:
-            print("🧠 Thought: Điểm CV_001 là 45 (< 60đ, không đạt), cần gửi email từ chối.")
-            print("🛠️ Action: send_recruitment_email[cv_id='CV_001', is_passed=False]")
+        final_answer = parse_final_answer(step_text)
+        if final_answer:
+            print(f"🏁 Final Answer: {final_answer}")
+            return
 
-            obs = send_recruitment_email("CV_001", is_passed=False)
-            print(f"👁️ Observation: {obs}")
-            print("🏁 Final Answer: Đã sàng lọc hồ sơ CV_001 (45 điểm, không đạt) và gửi email từ chối lịch sự tới ứng viên.")
-            break
-            
-    if step >= MAX_ITERATIONS:
-        print(f"🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
+        tool_name, raw_args = parse_action(step_text)
+        if not tool_name:
+            print("⚠️ Không phân tích được Action hợp lệ trong phản hồi của LLM. Dừng vòng lặp an toàn.")
+            return
+
+        observation = call_tool(tool_name, raw_args)
+        print(f"👁️ Observation: {observation}")
+        transcript += f"{step_text}\nObservation: {observation}\n"
+
+    print(f"🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
 
 
 if __name__ == "__main__":

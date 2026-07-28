@@ -22,6 +22,12 @@ MOCK_CV_DATABASE: Dict[str, Dict[str, Any]] = {
         "email": "levanc@gmail.com",
         "position": "Senior Technical Lead",
     },
+    "CV_003": {
+        "name": "Trần Thị B",
+        "score": 75,
+        "email": "tranthib@gmail.com",
+        "position": "Frontend Developer",
+    },
 }
 
 
@@ -45,7 +51,7 @@ def screen_and_score_cv(cv_id: str) -> str:
     if score > 85:
         classification = "Hồ sơ xuất sắc"
         status = "Đạt (Fast-track)"
-    elif 60 < score <= 85 :
+    elif 60 <= score <= 85:
         classification = "Hồ sơ đạt chuẩn"
         status = "Đạt"
     else:
