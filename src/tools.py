@@ -9,7 +9,7 @@ Cung cấp 3 Tool tuyển dụng:
 import random
 from typing import Dict, Any, List
 
-# Cơ sở dữ liệu mẫu hồ sơ CV (Không cố định điểm score nữa, chỉ lưu thông tin hồ sơ)
+# Cơ sở dữ liệu mẫu hồ sơ CV (Không lưu điểm cố định, điểm score sẽ được sinh ngẫu nhiên khi gọi Tool 1)
 MOCK_CV_DATABASE: Dict[str, Dict[str, Any]] = {
     "CV_001": {
         "name": "Nguyễn Văn A",
@@ -43,13 +43,13 @@ MOCK_CV_DATABASE: Dict[str, Dict[str, Any]] = {
 
 def screen_and_score_cv(cv_id: str) -> str:
     """
-    Tool 1: Sàng lọc và đánh giá chi tiết hồ sơ CV dựa trên mã ứng viên (Tự động sinh/tính điểm ngẫu nhiên).
+    Tool 1: Sàng lọc và đánh giá chi tiết hồ sơ CV dựa trên mã ứng viên (Điểm số được sinh ngẫu nhiên).
     
     Args:
         cv_id (str): Mã hồ sơ CV (Ví dụ: 'CV_001', 'CV_002', 'CV_003')
         
     Returns:
-        str: Thông tin chi tiết hồ sơ, điểm số tự động và kết quả đánh giá
+        str: Thông tin chi tiết hồ sơ, điểm số tự động sinh ngẫu nhiên và kết quả đánh giá
     """
     cv_id_clean = str(cv_id).strip().upper()
     if cv_id_clean not in MOCK_CV_DATABASE:
@@ -57,7 +57,7 @@ def screen_and_score_cv(cv_id: str) -> str:
     
     candidate = MOCK_CV_DATABASE[cv_id_clean]
     
-    # Tự động sinh điểm số ngẫu nhiên (Random score từ 35 đến 98) khi chấm điểm CV
+    # Tự động sinh điểm số ngẫu nhiên (Random score từ 35 đến 98) mỗi lần đánh giá CV
     score = random.randint(35, 98)
     skills_str = ", ".join(candidate["skills"])
     
@@ -77,7 +77,7 @@ def screen_and_score_cv(cv_id: str) -> str:
         f"- Vị trí: {candidate['position']} | Kinh nghiệm: {candidate['experience_years']} năm\n"
         f"- Học vấn: {candidate['education']}\n"
         f"- Kỹ năng: {skills_str}\n"
-        f"- Điểm số tự động (Random): {score}/100 | Xếp loại: {classification} | Trạng thái: {status}"
+        f"- Điểm số: {score}/100 | Xếp loại: {classification} | Trạng thái: {status}"
     )
 
 
