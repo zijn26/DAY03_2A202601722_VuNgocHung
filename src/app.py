@@ -75,25 +75,64 @@ def parse_final_answer(step_text: str):
     return match.group(1).strip() if match else None
 
 
-def _safe_eval_arg(node):
-    """LLM đôi khi viết CV_001 thay vì 'CV_001' (thiếu dấu nháy).
-    Coi token trần đó như chuỗi ký tự, còn lại vẫn chỉ nhận literal an toàn."""
-    if isinstance(node, ast.Name):
-        return node.id
-    return ast.literal_eval(node)
+def _split_top_level_args(raw_args: str):
+    """Tách tham số theo dấu phẩy ở cấp ngoài cùng, bỏ qua dấu phẩy nằm trong
+    dấu nháy hoặc ngoặc lồng nhau (VD tránh tách nhầm bên trong chuỗi ngày giờ)."""
+    parts, depth, quote, current = [], 0, None, ""
+    for ch in raw_args:
+        if quote:
+            current += ch
+            if ch == quote:
+                quote = None
+        elif ch in "'\"":
+            quote = ch
+            current += ch
+        elif ch in "([{":
+            depth += 1
+            current += ch
+        elif ch in ")]}":
+            depth -= 1
+            current += ch
+        elif ch == "," and depth == 0:
+            parts.append(current)
+            current = ""
+        else:
+            current += ch
+    if current.strip():
+        parts.append(current)
+    return [p.strip() for p in parts if p.strip()]
+
+
+_JSON_STYLE_BOOLEANS = {"true": True, "false": False}
+
+
+def _coerce_value(raw: str):
+    """Thử hiểu raw như literal Python an toàn (số, bool, chuỗi có nháy...).
+    LLM hay viết true/false chữ thường kiểu JSON thay vì True/False của Python -
+    nếu không bắt riêng, chuỗi "false" sẽ bị coi là chuỗi khác rỗng (luôn truthy!),
+    khiến is_passed=False bị hiểu nhầm thành True. Cũng xử lý luôn trường hợp
+    LLM quên dấu nháy quanh chuỗi (VD ngày 02/08/2026 bị hiểu nhầm là phép chia)."""
+    stripped = raw.strip()
+    if stripped.lower() in _JSON_STYLE_BOOLEANS:
+        return _JSON_STYLE_BOOLEANS[stripped.lower()]
+    try:
+        return ast.literal_eval(raw)
+    except (ValueError, SyntaxError):
+        return raw
 
 
 def parse_tool_args(raw_args: str):
-    """Bóc tách 'cv_id=\"CV_001\", is_passed=False' thành (args, kwargs) an toàn,
-    dùng ast.literal_eval thay vì eval() để tránh thực thi code tuỳ ý từ LLM."""
+    """Bóc tách 'cv_id=\"CV_001\", is_passed=False' thành (args, kwargs).
+    Mỗi tham số được xử lý độc lập nên 1 tham số thiếu dấu nháy không làm hỏng cả câu."""
     args, kwargs = [], {}
-    if not raw_args.strip():
-        return args, kwargs
-    call_node = ast.parse(f"f({raw_args})", mode="eval").body
-    for node in call_node.args:
-        args.append(_safe_eval_arg(node))
-    for kw in call_node.keywords:
-        kwargs[kw.arg] = _safe_eval_arg(kw.value)
+    for part in _split_top_level_args(raw_args):
+        if "=" in part:
+            key, _, value = part.partition("=")
+            key = key.strip()
+            if key.isidentifier():
+                kwargs[key] = _coerce_value(value.strip())
+                continue
+        args.append(_coerce_value(part))
     return args, kwargs
 
 
