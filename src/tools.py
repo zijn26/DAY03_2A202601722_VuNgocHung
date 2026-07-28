@@ -1,52 +1,65 @@
 """
 🛠️ TOOL REGISTRY & SCHEMAS (Dành cho Role 2: Tool & Spec Engineer)
 Cung cấp 3 Tool tuyển dụng:
-1. screen_and_score_cv: Đánh giá & chấm điểm CV
+1. screen_and_score_cv: Đánh giá & chấm điểm CV (Tự động sinh/tính điểm ngẫu nhiên)
 2. send_recruitment_email: Gửi email (tham số boolean is_passed: True/False)
 3. schedule_interview: Đặt lịch phỏng vấn (tham số Enum: 'Hồ sơ đạt chuẩn' | 'Hồ sơ xuất sắc')
 """
 
-from typing import Dict, Any
+import random
+from typing import Dict, Any, List
 
-# Cơ sở dữ liệu mẫu hồ sơ CV
+# Cơ sở dữ liệu mẫu hồ sơ CV (Không cố định điểm score nữa, chỉ lưu thông tin hồ sơ)
 MOCK_CV_DATABASE: Dict[str, Dict[str, Any]] = {
     "CV_001": {
         "name": "Nguyễn Văn A",
-        "score": 45,
         "email": "nguyenvana@gmail.com",
+        "phone": "0901234567",
         "position": "Java Developer",
+        "experience_years": 2,
+        "education": "Cử nhân CNTT - Đại học Bách Khoa",
+        "skills": ["Java", "Spring Boot", "MySQL", "Git"],
     },
     "CV_002": {
         "name": "Lê Văn C",
-        "score": 92,
         "email": "levanc@gmail.com",
+        "phone": "0987654321",
         "position": "Senior Technical Lead",
+        "experience_years": 7,
+        "education": "Kỹ sư Phần mềm - Đại học Quốc Gia",
+        "skills": ["Python", "System Design", "Microservices", "Docker", "Kubernetes", "Leadership"],
     },
     "CV_003": {
         "name": "Trần Thị B",
-        "score": 75,
         "email": "tranthib@gmail.com",
+        "phone": "0912345678",
         "position": "Frontend Developer",
+        "experience_years": 4,
+        "education": "Cử nhân Khoa học Máy tính - Đại học VinUni",
+        "skills": ["React", "TypeScript", "HTML5/CSS3", "TailwindCSS", "REST API"],
     },
 }
 
 
 def screen_and_score_cv(cv_id: str) -> str:
     """
-    Tool 1: Sàng lọc và đánh giá hồ sơ CV dựa trên mã ứng viên.
+    Tool 1: Sàng lọc và đánh giá chi tiết hồ sơ CV dựa trên mã ứng viên (Tự động sinh/tính điểm ngẫu nhiên).
     
     Args:
-        cv_id (str): Mã hồ sơ CV (Ví dụ: 'CV_001', 'CV_002')
+        cv_id (str): Mã hồ sơ CV (Ví dụ: 'CV_001', 'CV_002', 'CV_003')
         
     Returns:
-        str: Thông tin điểm số và kết quả đánh giá hồ sơ
+        str: Thông tin chi tiết hồ sơ, điểm số tự động và kết quả đánh giá
     """
     cv_id_clean = str(cv_id).strip().upper()
     if cv_id_clean not in MOCK_CV_DATABASE:
         return f"LỖI: Mã hồ sơ '{cv_id}' không tồn tại trong hệ thống."
     
     candidate = MOCK_CV_DATABASE[cv_id_clean]
-    score = candidate["score"]
+    
+    # Tự động sinh điểm số ngẫu nhiên (Random score từ 35 đến 98) khi chấm điểm CV
+    score = random.randint(35, 98)
+    skills_str = ", ".join(candidate["skills"])
     
     if score > 85:
         classification = "Hồ sơ xuất sắc"
@@ -59,8 +72,12 @@ def screen_and_score_cv(cv_id: str) -> str:
         status = "Loại"
         
     return (
-        f"Mã CV: {cv_id_clean} | Họ tên: {candidate['name']} | "
-        f"Điểm số: {score}/100 | Xếp loại: {classification} | Trạng thái: {status}"
+        f"📋 HỒ SƠ ỨNG VIÊN [{cv_id_clean}]:\n"
+        f"- Họ tên: {candidate['name']} | Email: {candidate['email']} | SĐT: {candidate['phone']}\n"
+        f"- Vị trí: {candidate['position']} | Kinh nghiệm: {candidate['experience_years']} năm\n"
+        f"- Học vấn: {candidate['education']}\n"
+        f"- Kỹ năng: {skills_str}\n"
+        f"- Điểm số tự động (Random): {score}/100 | Xếp loại: {classification} | Trạng thái: {status}"
     )
 
 
@@ -80,6 +97,11 @@ def send_recruitment_email(cv_id: str, is_passed: bool, message: str = "") -> st
     candidate = MOCK_CV_DATABASE.get(cv_id_clean, {})
     candidate_name = candidate.get("name", cv_id_clean)
     candidate_email = candidate.get("email", f"{cv_id_clean.lower()}@example.com")
+
+    if isinstance(is_passed, str):
+        is_passed = is_passed.strip().lower() in ["true", "1", "yes"]
+    else:
+        is_passed = bool(is_passed)
 
     if is_passed:
         subject = "THƯ MỜI PHỎNG VẤN TRỰC TIẾP"
