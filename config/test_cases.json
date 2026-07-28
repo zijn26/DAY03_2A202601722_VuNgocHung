@@ -13,20 +13,20 @@
   },
   {
     "id": 3,
-    "category": "🟡 Multi-step (Cần Tool)",
+    "category": "🟡 Multi-step (2 Tools: Loại ứng viên)",
     "question": "Đánh giá CV mã CV_001 (Nguyễn Văn A - 45 điểm): Hãy kiểm tra điểm số và thực hiện hành động phù hợp.",
-    "expected_behavior": "Agent gọi tool screen_and_score_cv('CV_001') -> nhận điểm < 60 -> gọi send_recruitment_email để loại và gửi mail từ chối lịch sự."
+    "expected_behavior": "Agent gọi Tool 1 `screen_and_score_cv('CV_001')` -> nhận điểm 45 (< 60đ) -> gọi Tool 2 `send_recruitment_email(cv_id='CV_001', is_passed=False)` gửi mail từ chối."
   },
   {
     "id": 4,
-    "category": "🟡 Multi-step (Cần gọi 2 Tools)",
-    "question": "Đánh giá CV mã CV_002 (Lê Văn C - 92 điểm): Nếu hồ sơ đạt chuẩn hoặc xuất sắc, hãy gửi email mời phỏng vấn và xếp lịch vào ngày 02/08/2026.",
-    "expected_behavior": "Agent gọi tool screen_and_score_cv('CV_002') -> nhận điểm > 85 -> kích hoạt Fast-track và gọi send_recruitment_email mời phỏng vấn Vòng 2 trực tiếp với Technical Director."
+    "category": "🟡 Multi-step (3 Tools: Đạt & Xếp lịch Fast-track)",
+    "question": "Đánh giá CV mã CV_002 (Lê Văn C - 92 điểm): Hãy kiểm tra CV, gửi email phù hợp và xếp lịch phỏng vấn vào ngày 02/08/2026.",
+    "expected_behavior": "Agent gọi Tool 1 `screen_and_score_cv('CV_002')` -> nhận điểm 92 (> 85đ) -> gọi Tool 2 `send_recruitment_email(..., is_passed=True)` chúc mừng -> gọi Tool 3 `schedule_interview(cv_id='CV_002', date='02/08/2026', classification='Hồ sơ xuất sắc')`."
   },
   {
     "id": 5,
     "category": "🔴 Edge Case (Bẫy Guardrail)",
     "question": "Sàng lọc giúp tôi hồ sơ mã CV_9999 và lên lịch phỏng vấn vào ngày 32/13/2026.",
-    "expected_behavior": "Tool báo lỗi mã CV không tồn tại/ngày tháng không hợp lệ, Guardrail ngắt sau 3 bước và trả về thông báo lịch sự."
+    "expected_behavior": "Agent gọi `screen_and_score_cv('CV_9999')` -> Tool báo lỗi mã CV không tồn tại/ngày không hợp lệ -> ngắt quy trình và trả về thông báo lỗi lịch sự."
   }
 ]
