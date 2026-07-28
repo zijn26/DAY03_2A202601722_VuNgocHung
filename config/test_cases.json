@@ -5,7 +5,7 @@
     "question": "Đánh giá CV mã CV_003 (Trần Thị B): Hãy kiểm tra điểm số và gửi email kết quả phù hợp.",
     "expected_behavior": "Agent gọi Tool 1 `screen_and_score_cv('CV_003')` -> nhận điểm 75 (Đạt chuẩn) -> gọi Tool 2 `send_recruitment_email(cv_id='CV_003', is_passed=True)` gửi email chúc mừng."
   },
-  {
+  { 
     "id": 2,
     "category": "🟡 Workflow Multi-step (3 Tools: Đạt chuẩn & Đặt lịch)",
     "question": "Sàng lọc CV mã CV_003 (Trần Thị B): Hãy kiểm tra CV, gửi email chúc mừng và đặt lịch phỏng vấn vào ngày 05/08/2026.",
