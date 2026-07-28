@@ -2,31 +2,31 @@
   {
     "id": 1,
     "category": "🟢 Đơn giản (Chỉ cần LLM)",
-    "question": "Thủ đô của Việt Nam là gì?",
+    "question": "Những kỹ năng mềm nào quan trọng nhất giúp ứng viên ghi điểm trong buổi phỏng vấn IT?",
     "expected_behavior": "Chatbot trả lời trực tiếp từ kiến thức có sẵn."
   },
   {
     "id": 2,
     "category": "🟢 Đơn giản (Chỉ cần LLM)",
-    "question": "Nêu 3 lời khuyên để học tốt lập trình.",
+    "question": "Quy trình phỏng vấn tiêu chuẩn của công ty gồm mấy vòng và diễn ra như thế nào?",
     "expected_behavior": "Chatbot trả lời trực tiếp từ kiến thức có sẵn."
   },
   {
     "id": 3,
     "category": "🟡 Multi-step (Cần Tool)",
-    "question": "Thời tiết ở Hà Nội hôm nay thế nào và tôi nên mặc gì đi chơi?",
-    "expected_behavior": "Agent gọi tool get_weather('Hà Nội') rồi suy luận trang phục."
+    "question": "Đánh giá CV mã CV_001 (Nguyễn Văn A - 45 điểm): Hãy kiểm tra điểm số và thực hiện hành động phù hợp.",
+    "expected_behavior": "Agent gọi tool screen_and_score_cv('CV_001') -> nhận điểm < 60 -> gọi send_recruitment_email để loại và gửi mail từ chối lịch sự."
   },
   {
     "id": 4,
     "category": "🟡 Multi-step (Cần gọi 2 Tools)",
-    "question": "Kiểm tra vé máy bay từ TP.HCM đi Hà Nội ngày mai và dự báo thời tiết ở Hà Nội.",
-    "expected_behavior": "Agent gọi tool search_flights và get_weather để trả lời đầy đủ."
+    "question": "Đánh giá CV mã CV_002 (Lê Văn C - 92 điểm): Nếu hồ sơ đạt chuẩn hoặc xuất sắc, hãy gửi email mời phỏng vấn và xếp lịch vào ngày 02/08/2026.",
+    "expected_behavior": "Agent gọi tool screen_and_score_cv('CV_002') -> nhận điểm > 85 -> kích hoạt Fast-track và gọi send_recruitment_email mời phỏng vấn Vòng 2 trực tiếp với Technical Director."
   },
   {
     "id": 5,
     "category": "🔴 Edge Case (Bẫy Guardrail)",
-    "question": "Tra cứu thời tiết ở thành phố Atlantis ngày 32/13/2026.",
-    "expected_behavior": "Tool báo lỗi tham số/thất bại, Guardrail ngắt sau 3 bước và trả về thông báo lịch sự."
+    "question": "Sàng lọc giúp tôi hồ sơ mã CV_9999 và lên lịch phỏng vấn vào ngày 32/13/2026.",
+    "expected_behavior": "Tool báo lỗi mã CV không tồn tại/ngày tháng không hợp lệ, Guardrail ngắt sau 3 bước và trả về thông báo lịch sự."
   }
 ]
