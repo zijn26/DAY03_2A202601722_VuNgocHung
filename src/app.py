@@ -97,6 +97,18 @@ def parse_tool_args(raw_args: str):
     return args, kwargs
 
 
+# Sau khi các tool trong danh sách này chạy xong, bắt buộc dừng lại chờ HR (người thật)
+# xác nhận trước khi Agent được đi tiếp sang bước ảnh hưởng ứng viên (gửi mail, xếp lịch...).
+HUMAN_APPROVAL_REQUIRED_AFTER = {"screen_and_score_cv"}
+
+
+def ask_human_approval(observation: str) -> bool:
+    """Human-in-the-loop: dừng chương trình thật, chờ HR gõ y/n ngoài terminal."""
+    print(f"\n🙋 [HUMAN-IN-THE-LOOP] Kết quả sàng lọc CV: {observation}")
+    answer = input("HR có đồng ý cho Agent tiếp tục xử lý (gửi email / xếp lịch)? (y/n): ").strip().lower()
+    return answer in ("y", "yes", "co", "có")
+
+
 def call_tool(tool_name: str, raw_args: str) -> str:
     if tool_name not in AVAILABLE_TOOLS:
         return f"LỖI: Tool '{tool_name}' không tồn tại. Tool khả dụng: {list(AVAILABLE_TOOLS.keys())}"
@@ -143,7 +155,14 @@ def run_react_agent(user_query: str, provider):
 
         observation = call_tool(tool_name, raw_args)
         print(f"👁️ Observation: {observation}")
-        transcript += f"{step_text}\nObservation: {observation}\n"
+
+        if tool_name in HUMAN_APPROVAL_REQUIRED_AFTER and not observation.startswith("LỖI"):
+            if not ask_human_approval(observation):
+                print("🛑 HR TỪ CHỐI PHÊ DUYỆT: Dừng quy trình, không gửi email/xếp lịch cho ứng viên này.")
+                return
+            transcript += f"{step_text}\nObservation: {observation}\nHR đã PHÊ DUYỆT, được phép tiếp tục xử lý ứng viên này.\n"
+        else:
+            transcript += f"{step_text}\nObservation: {observation}\n"
 
     print(f"🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
 
@@ -164,8 +183,8 @@ if __name__ == "__main__":
     # Chạy thử câu test số 3
     sample_query = tests[2]["question"]
     
-    print("--- DEMO 1: CHẠY TRÊN CHATBOT BASELINE ---")
-    run_baseline_chatbot(sample_query, provider)
+    # print("--- DEMO 1: CHẠY TRÊN CHATBOT BASELINE ---")
+    # run_baseline_chatbot(sample_query, provider)
     
     print("\n--- DEMO 2: CHẠY TRÊN REACT AGENT ---")
     run_react_agent(sample_query, provider)
