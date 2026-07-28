@@ -22,6 +22,12 @@ MOCK_CV_DATABASE: Dict[str, Dict[str, Any]] = {
         "email": "levanc@gmail.com",
         "position": "Senior Technical Lead",
     },
+    "CV_003": {
+        "name": "Trần Thị B",
+        "score": 75,
+        "email": "tranthib@gmail.com",
+        "position": "Frontend Developer",
+    },
 }
 
 
