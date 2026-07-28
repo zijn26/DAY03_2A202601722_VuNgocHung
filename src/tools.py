@@ -42,10 +42,10 @@ def screen_and_score_cv(cv_id: str) -> str:
     candidate = MOCK_CV_DATABASE[cv_id_clean]
     score = candidate["score"]
     
-    if score >= 85:
+    if score > 85:
         classification = "Hồ sơ xuất sắc"
         status = "Đạt (Fast-track)"
-    elif score >= 60:
+    elif 60 < score <= 85 :
         classification = "Hồ sơ đạt chuẩn"
         status = "Đạt"
     else:
@@ -128,7 +128,7 @@ def schedule_interview(cv_id: str, date: str, classification: str) -> str:
         return f"LỖI: Ngày phỏng vấn '{date}' không hợp lệ. Định dạng chuẩn là DD/MM/YYYY."
 
     candidate = MOCK_CV_DATABASE[cv_id_clean]
-    interviewer = "Technical Director" if classification == "Hồ sơ xuất sắc" else "Hội đồng Tuyển dụng"
+    interviewer = "Giám đốc kỹ thuật" if classification == "Hồ sơ xuất sắc" else "Hội đồng Tuyển dụng"
     
     return (
         f"📅 ĐẶT LỊCH PHỎNG VẤN THÀNH CÔNG!\n"
