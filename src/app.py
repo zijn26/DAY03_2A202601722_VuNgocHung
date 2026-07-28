@@ -143,7 +143,7 @@ HUMAN_APPROVAL_REQUIRED_AFTER = {"screen_and_score_cv"}
 
 def ask_human_approval(observation: str) -> bool:
     """Human-in-the-loop: dừng chương trình thật, chờ HR gõ y/n ngoài terminal."""
-    print(f"\n🙋 [HUMAN-IN-THE-LOOP] Kết quả sàng lọc CV: {observation}")
+    print("\n🙋 [HUMAN-IN-THE-LOOP] Yêu cầu phê duyệt từ HR cho kết quả sàng lọc CV trên:")
     answer = input("HR có đồng ý cho Agent tiếp tục xử lý (gửi email / xếp lịch)? (y/n): ").strip().lower()
     return answer in ("y", "yes", "co", "có")
 
@@ -180,12 +180,20 @@ def run_react_agent(user_query: str, provider):
         # Cắt bỏ phần Observation nếu LLM tự "bịa" thêm (chỉ hệ thống mới được sinh Observation)
         cut_idx = raw_response.find("Observation:")
         step_text = raw_response[:cut_idx].rstrip() if cut_idx != -1 else raw_response.rstrip()
-        print(step_text)
 
         final_answer = parse_final_answer(step_text)
         if final_answer:
+            fa_idx = step_text.find("Final Answer:")
+            if fa_idx > 0:
+                thought_part = step_text[:fa_idx].strip()
+                if thought_part:
+                    print(thought_part)
+            elif fa_idx == -1:
+                print(step_text)
             print(f"🏁 Final Answer: {final_answer}")
             return
+
+        print(step_text)
 
         tool_name, raw_args = parse_action(step_text)
         if not tool_name:
