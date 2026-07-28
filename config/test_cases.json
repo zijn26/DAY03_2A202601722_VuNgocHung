@@ -2,25 +2,25 @@
   {
     "id": 1,
     "category": "🟡 Workflow Multi-step (2 Tools: Đạt chuẩn)",
-    "question": "Đánh giá CV mã CV_003 (Trần Thị B - 75 điểm): Hãy kiểm tra điểm số và gửi email kết quả phù hợp.",
+    "question": "Đánh giá CV mã CV_003 (Trần Thị B): Hãy kiểm tra điểm số và gửi email kết quả phù hợp.",
     "expected_behavior": "Agent gọi Tool 1 `screen_and_score_cv('CV_003')` -> nhận điểm 75 (Đạt chuẩn) -> gọi Tool 2 `send_recruitment_email(cv_id='CV_003', is_passed=True)` gửi email chúc mừng."
   },
-  {
+  {  
     "id": 2,
     "category": "🟡 Workflow Multi-step (3 Tools: Đạt chuẩn & Đặt lịch)",
-    "question": "Sàng lọc CV mã CV_003 (Trần Thị B - 75 điểm): Hãy kiểm tra CV, gửi email chúc mừng và đặt lịch phỏng vấn vào ngày 05/08/2026.",
+    "question": "Sàng lọc CV mã CV_003 (Trần Thị B): Hãy kiểm tra CV, gửi email chúc mừng và đặt lịch phỏng vấn vào ngày 05/08/2026.",
     "expected_behavior": "Agent gọi Tool 1 `screen_and_score_cv('CV_003')` -> nhận điểm 75 (Đạt chuẩn) -> gọi Tool 2 `send_recruitment_email(..., is_passed=True)` -> gọi Tool 3 `schedule_interview(cv_id='CV_003', date='05/08/2026', classification='Hồ sơ đạt chuẩn')`."
   },
   {
     "id": 3,
     "category": "🟡 Workflow Multi-step (2 Tools: Loại ứng viên)",
-    "question": "Đánh giá CV mã CV_001 (Nguyễn Văn A - 45 điểm): Hãy kiểm tra điểm số và thực hiện hành động phù hợp.",
+    "question": "Đánh giá CV mã CV_001 (Nguyễn Văn A): Hãy kiểm tra điểm số và thực hiện hành động phù hợp.",
     "expected_behavior": "Agent gọi Tool 1 `screen_and_score_cv('CV_001')` -> nhận điểm 45 (< 60đ) -> gọi Tool 2 `send_recruitment_email(cv_id='CV_001', is_passed=False)` gửi mail từ chối."
   },
   {
     "id": 4,
     "category": "🟡 Workflow Multi-step (3 Tools: Đạt & Xếp lịch Fast-track)",
-    "question": "Đánh giá CV mã CV_002 (Lê Văn C - 92 điểm): Hãy kiểm tra CV, gửi email phù hợp và xếp lịch phỏng vấn vào ngày 02/08/2026.",
+    "question": "Đánh giá CV mã CV_002 (Lê Văn C): Hãy kiểm tra CV, gửi email phù hợp và xếp lịch phỏng vấn vào ngày 02/08/2026.",
     "expected_behavior": "Agent gọi Tool 1 `screen_and_score_cv('CV_002')` -> nhận điểm 92 (> 85đ) -> gọi Tool 2 `send_recruitment_email(..., is_passed=True)` chúc mừng -> gọi Tool 3 `schedule_interview(cv_id='CV_002', date='02/08/2026', classification='Hồ sơ xuất sắc')`."
   },
   {
